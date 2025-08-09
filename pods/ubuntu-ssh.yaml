@@ -1,0 +1,85 @@
+---
+# Alternative: Ubuntu Server with SSH access
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ubuntu-server-ssh
+  namespace: tests-misc
+  labels:
+    app: ubuntu-server-ssh
+spec:
+  containers:
+  - name: ubuntu-ssh
+    image: ubuntu:22.04
+    command: ["/bin/bash"]
+    args: 
+      - "-c"
+      - |
+        apt-get update && 
+        apt-get install -y openssh-server sudo curl wget vim && 
+        mkdir /var/run/sshd && 
+        echo 'root:password' | chpasswd && 
+        sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config &&
+        service ssh start &&
+        sleep infinity
+    ports:
+    - containerPort: 22
+      name: ssh
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+  restartPolicy: Always
+
+---
+# Service to expose SSH (if using the SSH variant)
+apiVersion: v1
+kind: Service
+metadata:
+  name: ubuntu-ssh-service
+  namespace: tests-misc
+spec:
+  selector:
+    app: ubuntu-server-ssh
+  ports:
+  - name: ssh
+    port: 22
+    targetPort: 22
+    protocol: TCP
+  type: ClusterIP
+
+---
+# Deployment version (recommended for production)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ubuntu-server-deployment
+  namespace: tests-misc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ubuntu-server-deploy
+  template:
+    metadata:
+      labels:
+        app: ubuntu-server-deploy
+    spec:
+      containers:
+      - name: ubuntu
+        image: ubuntu:22.04
+        command: ["/bin/bash"]
+        args: ["-c", "apt-get update && apt-get install -y curl wget vim net-tools && sleep infinity"]
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        env:
+        - name: DEBIAN_FRONTEND
+          value: "noninteractive"

@@ -1,0 +1,55 @@
+# cilium-values.yaml
+cluster:
+  name: talos-local
+  id: 1
+
+ipam:
+  mode: kubernetes
+
+kubeProxyReplacement: strict
+
+k8sServiceHost: 127.0.0.1
+k8sServicePort: 7445
+
+# Enable Hubble for observability
+hubble:
+  enabled: true
+  relay:
+    enabled: true
+  ui:
+    enabled: true
+
+# Enable L7 proxy
+l7Proxy: true
+
+# Configure for local development
+nodePort:
+  enabled: true
+
+# Disable masquerading for local cluster
+masquerade: false
+
+# Configure tunnel mode
+tunnel: vxlan
+
+# Enable bandwidth manager
+bandwidthManager:
+  enabled: true
+
+# Configure load balancer
+loadBalancer:
+  algorithm: maglev
+
+# Enable host firewall
+hostFirewall:
+  enabled: true
+
+# Configure operator
+operator:
+  replicas: 1
+
+# Enable encryption (optional)
+encryption:
+  enabled: false
+  type: wireguard
+
